@@ -285,6 +285,7 @@ int VVEncImpl::encode( vvencYUVBuffer* pcYUVBuffer, vvencAccessUnit* pcAccessUni
     if( pcYUVBuffer->planes[0].ptr == nullptr )
     {
       m_cErrorString = "InputPicture: invalid input buffers";
+      msg.log( VVENC_ERROR, m_cErrorString.c_str() );
       return VVENC_ERR_UNSPECIFIED;
     }
 
@@ -294,6 +295,7 @@ int VVEncImpl::encode( vvencYUVBuffer* pcYUVBuffer, vvencAccessUnit* pcAccessUni
           pcYUVBuffer->planes[2].ptr == nullptr )
       {
         m_cErrorString = "InputPicture: invalid input buffers for chroma";
+        msg.log( VVENC_ERROR, m_cErrorString.c_str() );
         return VVENC_ERR_UNSPECIFIED;
       }
     }
@@ -301,18 +303,21 @@ int VVEncImpl::encode( vvencYUVBuffer* pcYUVBuffer, vvencAccessUnit* pcAccessUni
     if( pcYUVBuffer->planes[0].width != m_cVVEncCfg.m_SourceWidth )
     {
       m_cErrorString = "InputPicture: unsupported width";
+      msg.log( VVENC_ERROR, m_cErrorString.c_str() );
       return VVENC_ERR_UNSPECIFIED;
     }
 
     if( pcYUVBuffer->planes[0].height != m_cVVEncCfg.m_SourceHeight )
     {
       m_cErrorString = "InputPicture: unsupported height";
+      msg.log( VVENC_ERROR, m_cErrorString.c_str() );
       return VVENC_ERR_UNSPECIFIED;
     }
 
     if( pcYUVBuffer->planes[0].width > pcYUVBuffer->planes[0].stride )
     {
       m_cErrorString = "InputPicture: unsupported width stride combination";
+      msg.log( VVENC_ERROR, m_cErrorString.c_str() );
       return VVENC_ERR_UNSPECIFIED;
     }
 
@@ -323,12 +328,14 @@ int VVEncImpl::encode( vvencYUVBuffer* pcYUVBuffer, vvencAccessUnit* pcAccessUni
         if( pcYUVBuffer->planes[1].stride && pcYUVBuffer->planes[0].width > pcYUVBuffer->planes[1].stride )
         {
           m_cErrorString = "InputPicture: unsupported width cstride combination for 2nd plane";
+          msg.log( VVENC_ERROR, m_cErrorString.c_str() );
           return VVENC_ERR_UNSPECIFIED;
         }
 
         if( pcYUVBuffer->planes[2].stride && pcYUVBuffer->planes[0].width > pcYUVBuffer->planes[2].stride )
         {
           m_cErrorString = "InputPicture: unsupported width cstride combination for 3rd plane";
+          msg.log( VVENC_ERROR, m_cErrorString.c_str() );
           return VVENC_ERR_UNSPECIFIED;
         }
       }
@@ -337,12 +344,14 @@ int VVEncImpl::encode( vvencYUVBuffer* pcYUVBuffer, vvencAccessUnit* pcAccessUni
         if( pcYUVBuffer->planes[1].stride && pcYUVBuffer->planes[0].width/2 > pcYUVBuffer->planes[1].stride )
         {
           m_cErrorString = "InputPicture: unsupported width cstride combination for 2nd plane";
+          msg.log( VVENC_ERROR, m_cErrorString.c_str() );
           return VVENC_ERR_UNSPECIFIED;
         }
 
         if( pcYUVBuffer->planes[2].stride && pcYUVBuffer->planes[0].width/2 > pcYUVBuffer->planes[2].stride )
         {
           m_cErrorString = "InputPicture: unsupported width cstride combination for 3rd plane";
+          msg.log( VVENC_ERROR, m_cErrorString.c_str() );
           return VVENC_ERR_UNSPECIFIED;
         }
       }
@@ -351,6 +360,7 @@ int VVEncImpl::encode( vvencYUVBuffer* pcYUVBuffer, vvencAccessUnit* pcAccessUni
     if ( ! xConvertVerifyYUVBuffer( pcYUVBuffer ) )
     {     
       m_cErrorString = "InputPicture: Source image contains values outside the specified bit range";
+      msg.log( VVENC_ERROR, m_cErrorString.c_str() );
       return VVENC_ERR_UNSPECIFIED;
     }
 

@@ -2431,6 +2431,7 @@ void EncGOP::xWritePicture( Picture& pic, AccessUnitList& au, bool isEncodeLtRef
   au.poc           = pic.poc;
   au.temporalLayer = pic.TLayer;
   au.refPic        = pic.isReferenced;
+  au.userData      = pic.userData;
   if( ! pic.slices.empty() )
   {
     au.sliceType = pic.slices[ 0 ]->sliceType;

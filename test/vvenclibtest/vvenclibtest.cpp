@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------------------
 The copyright in this software is being made available under the Clear BSD
-License, included below. No patent rights, trademark rights and/or 
-other Intellectual Property Rights other than the copyrights concerning 
+License, included below. No patent rights, trademark rights and/or
+other Intellectual Property Rights other than the copyrights concerning
 the Software are granted under this license.
 
 The Clear BSD License
@@ -54,6 +54,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <vector>
 #include <tuple>
+#include <unordered_set>
 
 #include "vvenc/version.h"
 #include "vvenc/vvenc.h"
@@ -62,12 +63,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TESTT(x,w)  { int res = x; g_numTests++; g_numFails += res;  if( g_verbose ) if(res) { std::cerr << "\n" << w << "\n test failed: In function "  << __FUNCTION__ << "\" ln " <<  __LINE__;} }
 #define ERROR(w)    { g_numTests++; g_numFails ++;                   if( g_verbose ) std::cerr << "\n" << w << " test failed: In function "  << __FUNCTION__ << "\" ln " <<  __LINE__; }
 
-int g_numTests = 0; 
+int g_numTests = 0;
 int g_numFails = 0;
 int g_verbose = 0;
 
 int testLibCallingOrder();     // check invalid caling order
-int testLibParameterRanges();  // single parameter rangewew checks 
+int testLibParameterRanges();  // single parameter rangewew checks
 int testInvalidInputParams();  // input Buffer does not match
 int testSDKDefaultBehaviour(); // check default behaviour when using in sdk
 int testStringApiInterface();  // check behaviour when using in sdk by using string api
@@ -96,7 +97,7 @@ int main( int argc, char* argv[] )
     }
   }
 
-  g_numTests = 0; 
+  g_numTests = 0;
   g_numFails = 0;
   g_verbose = 1;
 
@@ -104,17 +105,17 @@ int main( int argc, char* argv[] )
   {
   case 1:
   {
-    testLibParameterRanges(); 
+    testLibParameterRanges();
     break;
   }
-  case 2: 
+  case 2:
   {
-    testLibCallingOrder(); 
+    testLibCallingOrder();
     break;
   }
-  case 3: 
+  case 3:
   {
-    testInvalidInputParams(); 
+    testInvalidInputParams();
     break;
   }
   case 4:
@@ -150,11 +151,11 @@ int main( int argc, char* argv[] )
 
   if( g_numFails == 0 )
   {
-    std::cerr << "\n\n all of " << g_numTests << " tests succeeded"; 
+    std::cerr << "\n\n all of " << g_numTests << " tests succeeded";
   }
   else
   {
-    std::cerr << "\n\n" << g_numFails << " out of " << g_numTests << " tests failed"; 
+    std::cerr << "\n\n" << g_numFails << " out of " << g_numTests << " tests failed";
   }
   return g_numFails;
 }
@@ -221,7 +222,7 @@ int testParamList( const std::string& w, T& testParam, vvenc_config& vvencParams
     }
     catch ( ... )
     {
-      ERROR( "\nCaught Exception " << w << "==" << testVal << " expected " << ( expectedFail ? "failure" : "success" ) ); //fail due to exception 
+      ERROR( "\nCaught Exception " << w << "==" << testVal << " expected " << ( expectedFail ? "failure" : "success" ) ); //fail due to exception
     }
   }
 
@@ -312,7 +313,7 @@ int testLibParameterRanges()
 //  vvencParams.temporalScale = 1001;
 //  testParamList( "TemporalRate",                           vvencParams.temporalRate,               vvencParams, { 24000,30000,60000 /*,1200000*/ } );
 //  testParamList( "TemporalRate",                           vvencParams.temporalRate,               vvencParams, { -1,1,0,24 }, true );
-  
+
   vvencParams.m_SourceWidth        = 832;
   vvencParams.m_SourceHeight       = 480;
   testParamList<bool, bool>( "PicPartition",               vvencParams.m_picPartitionFlag,           vvencParams, { 1 } );
@@ -355,7 +356,7 @@ int testfunc( const std::string& w, int (*funcCallingOrder)(void), const bool ex
   }
   catch(...)
   {
-    ERROR("\nCaught Exception " << w << " expected " << (expectedFail ? "failure" : "success")); //fail due to exception 
+    ERROR("\nCaught Exception " << w << " expected " << (expectedFail ? "failure" : "success")); //fail due to exception
   }
 
   return (numFails == g_numFails) ? 0 : 1;
@@ -895,7 +896,7 @@ int checkSDKStringApiInvalid()
   return ret;
 }
 
-static int runEncoder( vvenc_config& c, uint64_t framesToEncode ) 
+static int runEncoder( vvenc_config& c, uint64_t framesToEncode )
 {
   uint64_t ctsDiff   = (c.m_TicksPerSecond > 0) ? (uint64_t)c.m_TicksPerSecond * (uint64_t)c.m_FrameScale / (uint64_t)c.m_FrameRate : 1;  // expected cts diff between frames
   uint64_t ctsOffset = (c.m_TicksPerSecond > 0) ? (uint64_t)c.m_TicksPerSecond : (uint64_t)c.m_FrameRate/(uint64_t)c.m_FrameScale;        // start with offset 1sec, to generate  cts/dts > 0
@@ -916,12 +917,17 @@ static int runEncoder( vvenc_config& c, uint64_t framesToEncode )
   vvencYUVBuffer *yuvPicture = vvenc_YUVBuffer_alloc();
   vvenc_YUVBuffer_alloc_buffer( yuvPicture, c.m_internChromaFormat, c.m_SourceWidth, c.m_SourceHeight );
   fillInputPic( yuvPicture );
-  
+
   uint64_t lastDts=0;
   uint64_t auCount=0;
   bool eof       = false;
   bool encodeDone = false;
   uint64_t framesRcvd = 0;
+
+#ifdef VVENC_USE_UNSTABLE_API
+  std::unordered_set<int> userDataSet;
+#endif
+
   while( !eof || !encodeDone )
   {
     vvencYUVBuffer* inputPtr = nullptr;
@@ -930,6 +936,9 @@ static int runEncoder( vvenc_config& c, uint64_t framesToEncode )
       inputPtr             = yuvPicture;
       yuvPicture->cts      = (c.m_TicksPerSecond > 0) ? (ctsOffset + (framesRcvd * (uint64_t)c.m_TicksPerSecond * (uint64_t)c.m_FrameScale / (uint64_t)c.m_FrameRate)) : (ctsOffset + framesRcvd);
       yuvPicture->ctsValid = true;
+#ifdef VVENC_USE_UNSTABLE_API
+      yuvPicture->userData   = new int(framesRcvd);
+#endif
       framesRcvd++;
     }
 
@@ -944,7 +953,7 @@ static int runEncoder( vvenc_config& c, uint64_t framesToEncode )
       if ( !AU->ctsValid || !AU->dtsValid )
       {
         goto fail;
-      } 
+      }
       //std::cout << " AU dts " << AU->dts << " lastDts " << lastDts  << " diff " << AU->dts - lastDts << std::endl;
       if ( lastDts > 0 && (AU->dts != lastDts + ctsDiff || AU->dts <= lastDts) )
       {
@@ -956,6 +965,11 @@ static int runEncoder( vvenc_config& c, uint64_t framesToEncode )
         goto fail;
       }
       lastDts = AU->dts;
+#ifdef VVENC_USE_UNSTABLE_API
+      int* userData = static_cast<int*>(AU->userData);
+      userDataSet.insert( *userData);
+      delete userData;
+#endif
     }
 
     if ( auCount > 0 && (!AU || ( AU &&  AU->payloadUsedSize == 0 )) )
@@ -975,6 +989,14 @@ static int runEncoder( vvenc_config& c, uint64_t framesToEncode )
     //std::cout << "expecting " << framesToEncode << " au, but only encoded " << auCount << std::endl;
     goto fail;
   }
+
+#ifdef VVENC_USE_UNSTABLE_API
+  if (userDataSet.size() != framesToEncode)
+  {
+    std::cout << "expecting " << framesToEncode << " unique user data values, but got " << userDataSet.size() << std::endl;
+    goto fail;
+  }
+#endif
 
   vvenc_YUVBuffer_free( yuvPicture, true );
   vvenc_accessUnit_free( AU, true );
@@ -1318,7 +1340,7 @@ int testInvalidInputParams()
   testfunc( "invalidInputInvalidPicSize",                    &invalidInputInvalidPicSize,               true );
   testfunc( "invalidInputInvalidLumaStride",                 &invalidInputInvalidLumaStride,            true );
   testfunc( "invalidInputInvalidChromaStride",               &invalidInputInvalidChromaStride,          true );
- 
+
   return 0;
 }
 

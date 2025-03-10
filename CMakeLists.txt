@@ -157,6 +157,8 @@ set( VVENC_INSTALL_FULLFEATURE_APP          OFF CACHE BOOL   "Install the full-f
 
 set( VVENC_ENABLE_WERROR                    ON  CACHE BOOL   "Treat warnings as errors (-Werror or /WX)" )
 
+set( VVENC_ENABLE_UNSTABLE_API              OFF CACHE BOOL   "Enable unstable API" )
+
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
     CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
 
@@ -268,6 +270,10 @@ if( VVENC_ENABLE_WERROR )
   add_compile_options( "$<$<CXX_COMPILER_ID:MSVC>:/WX>" )
 endif()
 
+if( VVENC_ENABLE_UNSTABLE_API )
+  add_definitions( -DVVENC_USE_UNSTABLE_API )
+endif()
+
 if( VVENC_ENABLE_X86_SIMD )
   if( ( UNIX OR MINGW ) AND VVENC_OPT_TARGET_ARCH )
     set( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -march=${VVENC_OPT_TARGET_ARCH} -mtune=${VVENC_OPT_TARGET_ARCH}" )
@@ -360,7 +366,7 @@ if( VVENC_ENABLE_INSTALL )
 
   # use GNU install dirs
   include( GNUInstallDirs )
-  
+
   if( BUILD_SHARED_LIBS AND NOT WIN32 )
     set( CMAKE_SKIP_INSTALL_RPATH OFF CACHE BOOL "skip rpath" )
     if( APPLE )
@@ -368,9 +374,9 @@ if( VVENC_ENABLE_INSTALL )
     elseif( UNIX )
       set( RPATH_BASE $ORIGIN )
     endif()
-    
+
     file( RELATIVE_PATH RPATH_REL_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR} )
-    
+
     set( CMAKE_INSTALL_RPATH ${RPATH_BASE} ${RPATH_BASE}/${RPATH_REL_DIR} )
     message( STATUS "CMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}" )
   endif()

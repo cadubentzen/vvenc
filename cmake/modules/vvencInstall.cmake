@@ -59,6 +59,11 @@ endmacro( install_exe_pdb )
 # set interface include directories
 target_include_directories( vvenc  SYSTEM INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 
+if( VVENC_ENABLE_UNSTABLE_API )
+  target_compile_definitions( vvenc INTERFACE VVENC_USE_UNSTABLE_API )
+  set( VVENC_PKG_EXTRA_CFLAGS "-DVVENC_USE_UNSTABLE_API" )
+endif()
+
 # install headers
 install( FILES     ${CMAKE_BINARY_DIR}/vvenc/version.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vvenc )
 install( DIRECTORY include/vvenc                        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )

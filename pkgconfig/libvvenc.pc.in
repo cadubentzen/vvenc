@@ -8,4 +8,4 @@ Description: Fraunhofer Versatile Video Encoder (VVenC)
 Version: @PROJECT_VERSION@
 Libs: -L${libdir} -lvvenc
 Libs.private: @VVENC_PKG_EXTRA_LIBS@
-Cflags: -I${includedir}
+Cflags: -I${includedir} @VVENC_PKG_EXTRA_CFLAGS@
